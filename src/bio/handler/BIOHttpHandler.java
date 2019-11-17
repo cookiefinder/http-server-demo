@@ -11,8 +11,14 @@ import java.net.Socket;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 public class BIOHttpHandler implements Runnable {
+    private static final String RESPONSE_LINE = "HTTP/1.1 200 OK";
+    private static final String CONTENT_TYPE = "Content-Type";
+    private static final String CONTENT_LENGTH = "Content-Length";
+    private static final String SERVER = "Server";
+    private static final String DATE = "Date";
     private static Map<String, String> mediaTypeMap = new HashMap<>();
     private static final String WEB_ROOT = "/Users/zijie.jiang/twuc/webroot";
     static {
@@ -48,13 +54,18 @@ public class BIOHttpHandler implements Runnable {
         PrintWriter printWriter = null;
         try {
             bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
-            String uri = bufferedReader.readLine().split(" ")[1];//http://localhost:9002/
-            if (uri.equals("/")) {
-                uri += "index.html";
+            String line;
+            StringBuilder request = new StringBuilder();
+            while (!"".equals(line = bufferedReader.readLine())) {
+                request.append(line).append('\n');
             }
-            String contentType = uri.substring(uri.lastIndexOf('.') + 1);
+            String requestUrl = request.toString().split(" ")[1];//http://localhost:9002/
+            if (requestUrl.equals("/")) {
+                requestUrl += "index.html";
+            }
+            String contentType = requestUrl.substring(requestUrl.lastIndexOf('.') + 1);
             printWriter = new PrintWriter(outputStream);
-            InputStream fileInputStream = new FileInputStream(WEB_ROOT + uri);
+            InputStream fileInputStream = new FileInputStream(WEB_ROOT + requestUrl);
             flushResponse(printWriter, contentType, fileInputStream);
         } catch (IOException e) {
             e.printStackTrace();
@@ -76,11 +87,11 @@ public class BIOHttpHandler implements Runnable {
     }
 
     private void flushResponse(PrintWriter printWriter, String contentType, InputStream fileInputStream) throws IOException {
-        printWriter.println("HTTP/1.1 200 ok");
-        printWriter.println("Content-Type: " + mediaTypeMap.get(contentType) + ";charset=utf-8");
-        printWriter.println("Content-Length: " + fileInputStream.available());
-        printWriter.println("Server: hi, welcome!");
-        printWriter.println("Date: " + new Date());
+        printWriter.println(RESPONSE_LINE);
+        printWriter.println(CONTENT_TYPE + ": " + mediaTypeMap.get(contentType) + ";charset=utf-8");
+        printWriter.println(CONTENT_LENGTH + ": " + fileInputStream.available());
+        printWriter.println(SERVER + ": " + "Apache");
+        printWriter.println(DATE + ": " + new Date());
         printWriter.println();
         printWriter.flush();
         byte[] bytes = new byte[1024];// 1KB

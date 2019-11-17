@@ -20,9 +20,9 @@ public class BIOHttpServer {
             System.out.println("服务端启动，监听9002端口...");
             while (!Thread.interrupted()) {
                 Socket socketClient = server.accept();
-                communicateWithClient(socketClient);
+//                communicateWithClient(socketClient);
 //                 通过线程池启动线程处理Http请求
-//                acceptHttpRequest(pool, socketClient);
+                acceptHttpRequest(pool, socketClient);
             }
         } finally {
             pool.shutdown();
